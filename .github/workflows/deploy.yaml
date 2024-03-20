@@ -2,11 +2,14 @@ name: Deploy image to GHCR 🪂
 
 env:
   REGISTRY: ghcr.io
-  # PLATFORMs is a comma-separted list of architectures to build for.
+  # PLATFORMS is a comma-separted list of architectures to build for.
   # We disable linux/arm64 due to runner mem saturation.
   PLATFORMS: linux/amd64
 
 on:
+  push:
+    branches:
+      - add-julia-docker-image
   # repository_dispatch:
   #   types:
   #     - scheduled
@@ -81,13 +84,23 @@ jobs:
             fi
             echo ${var}
           }
-          ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
-          SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
-          DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
-          DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} ${{ github.event.client_payload.destination_image_tag }})
+
+          # TODO Remove once the workflow appears on main.
+          ORIGIN=$(normalize ${{ github.event.inputs.origin }} julia)
+          SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} 1.10-bookworm)
+          DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} julia-vscode)
+          DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} 1.10-bookworm)
+
+          # TODO uncomment once this is merged to main.
+          # ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
+          # SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
+          # DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
+          # DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} ${{ github.event.client_payload.destination_image_tag }})
+
           TAG=$(normalize ${{ github.event.inputs.tag }} ${{ github.event.client_payload.tag }})
           TAG_LATEST=$(normalize ${{ github.event.inputs.tag_latest }} ${{ github.event.client_payload.tag_latest }})
           RELEASE_TAG=$(normalize ${{ github.event.inputs.release_tag }} ${{ github.event.client_payload.release_tag }})
+
           echo "ORIGIN=$ORIGIN" >> $GITHUB_OUTPUT
           echo "SOURCE_IMAGE_TAG=$SOURCE_IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "DESTINATION_IMAGE_NAME=$DESTINATION_IMAGE_NAME" >> $GITHUB_OUTPUT
