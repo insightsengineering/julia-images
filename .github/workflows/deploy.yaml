@@ -1,0 +1,265 @@
+name: Deploy image to GHCR 🪂
+
+env:
+  REGISTRY: ghcr.io
+  # PLATFORMs is a comma-separted list of architectures to build for.
+  # We disable linux/arm64 due to runner mem saturation.
+  PLATFORMS: linux/amd64
+
+on:
+  # repository_dispatch:
+  #   types:
+  #     - scheduled
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: DockerHub org or username where the base image is located
+        required: true
+        type: choice
+        default: "julia"
+        options:
+          - "julia"
+
+      source_image_tag:
+        description: Source image tag
+        required: true
+        type: choice
+        default: "1.10-bookworm"
+        options:
+          - "1.10-bookworm"
+
+      destination_image_name:
+        description: Destination image name
+        required: true
+        type: choice
+        default: "julia-vscode"
+        options:
+          - "julia-vscode"
+
+      destination_image_tag:
+        description: Destination image tag
+        required: true
+        type: choice
+        default: "1.10-bookworm"
+        options:
+          - "1.10-bookworm"
+
+      tag:
+        description: |
+          Custom Image Tag/Version. Defaults to current date in the `YYYY.MM.DD`
+          format if unspecified.
+        required: false
+        default: ""
+
+      tag_latest:
+        description: Tag image as `latest`
+        default: false
+        type: boolean
+
+      release_tag:
+        description: |
+          Release tag to which SBOM generated for image should be attached.
+          Release tags follow the `YYYY.MM.DD` format.
+          This must be specified if you want to upload artifacts to the release.
+        required: false
+        default: ""
+
+jobs:
+  normalize-inputs:
+    name: Normalize inputs 🧹
+    runs-on: ubuntu-latest
+    steps:
+      - name: Normalize 🧽
+        id: normalizer
+        run: |
+          function normalize() {
+            local var=$1
+            if [ "$var" == "" ]
+            then {
+              var=$2
+            }
+            fi
+            echo ${var}
+          }
+          ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
+          SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
+          DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
+          DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} ${{ github.event.client_payload.destination_image_tag }})
+          TAG=$(normalize ${{ github.event.inputs.tag }} ${{ github.event.client_payload.tag }})
+          TAG_LATEST=$(normalize ${{ github.event.inputs.tag_latest }} ${{ github.event.client_payload.tag_latest }})
+          RELEASE_TAG=$(normalize ${{ github.event.inputs.release_tag }} ${{ github.event.client_payload.release_tag }})
+          echo "ORIGIN=$ORIGIN" >> $GITHUB_OUTPUT
+          echo "SOURCE_IMAGE_TAG=$SOURCE_IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "DESTINATION_IMAGE_NAME=$DESTINATION_IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "DESTINATION_IMAGE_TAG=$DESTINATION_IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "TAG_LATEST=$TAG_LATEST" >> $GITHUB_OUTPUT
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
+        shell: bash
+    outputs:
+      origin: ${{ steps.normalizer.outputs.ORIGIN }}
+      source_image_tag: ${{ steps.normalizer.outputs.SOURCE_IMAGE_TAG }}
+      destination_image_name: ${{ steps.normalizer.outputs.DESTINATION_IMAGE_NAME }}
+      destination_image_tag: ${{ steps.normalizer.outputs.DESTINATION_IMAGE_TAG }}
+      tag: ${{ steps.normalizer.outputs.TAG }}
+      tag_latest: ${{ steps.normalizer.outputs.TAG_LATEST }}
+      release_tag: ${{ steps.normalizer.outputs.RELEASE_TAG }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: normalize-inputs
+    name: Build & Deploy 🚀 ${{ needs.normalize-inputs.outputs.destination_image_name }}:${{ needs.normalize-inputs.outputs.destination_image_tag }}
+
+    # Token permissions
+    permissions:
+      contents: read
+      packages: write
+
+    # Build steps
+    steps:
+      - name: Reclaim Disk Space 🚮
+        uses: insightsengineering/disk-space-reclaimer@v1
+        with:
+          tools-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: false
+          docker-images: true
+
+      - name: Checkout repository 💳
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        id: buildx
+        with:
+          install: true
+
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ env.PLATFORMS }}
+
+      - name: Cache Docker layers ♻️
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.destination_image_tag }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.destination_image_tag }}
+            ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}
+            ${{ runner.os }}-buildx-
+
+      - name: Log in to the Container registry 🗝
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set build variables 📐
+        id: build_vars
+        run: |
+          # Set default tag as 'YYYY.MM.DD' date if it isn't set
+          tag="${{ needs.normalize-inputs.outputs.tag }}"
+          if [ "${tag}" == "" ]
+          then {
+            tag=$(date +%Y.%m.%d)
+          }
+          fi
+
+          tag_latest="${{ needs.normalize-inputs.outputs.tag_latest }}"
+          image_name="${{ needs.normalize-inputs.outputs.destination_image_name }}
+          image_tag="${{ needs.normalize-inputs.outputs.destination_image_tag }}
+
+          # Set full image name
+          full_names="${{ env.REGISTRY }}/${{ github.repository_owner }}/${image_name}:${tag}"
+          echo "OUTPUT_IMAGE_NAME=${full_names}" >> $GITHUB_OUTPUT
+          if [ "${tag_latest}" == "true" ]
+          then
+            full_names="$full_names,${{ env.REGISTRY }}/${{ github.repository_owner }}/${image_name}:latest"
+          fi
+          echo "FULL_NAMES=${full_names}" >> $GITHUB_OUTPUT
+          echo "FULL_NAMES=${full_names}"
+
+          # Push the image if we're running for main
+          echo "github.ref = ${{ github.ref }}"
+          if [ "${{ github.ref }}" == 'refs/heads/main' ]; then
+            echo "DOCKER_PUSH=true" >> $GITHUB_OUTPUT
+            echo "DOCKER_PUSH = true"
+          else
+            echo "DOCKER_PUSH=false" >> $GITHUB_OUTPUT
+            echo "DOCKER_PUSH = false"
+          fi
+
+          echo "SBOM_OUTPUT_FILENAME=$GITHUB_WORKSPACE/sbom.json" >> $GITHUB_OUTPUT
+
+      - name: Build and push image 🏗
+        uses: docker/build-push-action@v5
+        with:
+          context: ./
+          file: Dockerfile
+          push: ${{ steps.build_vars.outputs.DOCKER_PUSH }}
+          tags: ${{ steps.build_vars.outputs.FULL_NAMES }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          build-args: |
+            ORIGIN=${{ needs.normalize-inputs.outputs.origin }}
+            SOURCE_IMAGE_TAG=${{ needs.normalize-inputs.outputs.source_image_tag }}
+            DESTINATION_IMAGE_NAME=${{ needs.normalize-inputs.outputs.destination_image_name }}
+            DESTINATION_IMAGE_TAG=${{ needs.normalize-inputs.outputs.destination_image_tag }}
+          platforms: ${{ env.PLATFORMS }}
+
+      - name: Generate image manifest 🐳
+        run: |
+          docker manifest inspect ${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }} > manifest.json
+
+      # - name: Reclaim Disk Space for SBOM Generation 🚮
+      #   uses: insightsengineering/disk-space-reclaimer@v1
+      #   with:
+      #     tools-cache: false
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: true
+      #     swap-storage: false
+      #     docker-images: true
+
+      # - name: Generate SBOM 📃
+      #   uses: anchore/sbom-action@v0
+      #   with:
+      #     image: "${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}"
+      #     output-file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
+      #     artifact-name: "sbom.spdx"
+
+      # - name: Upload image manifest to release 🔼
+      #   uses: svenstaro/upload-release-action@v2
+      #   if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+      #   with:
+      #     repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
+      #     file: "manifest.json"
+      #     asset_name: "image.manifest.${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.json"
+      #     tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
+      #     overwrite: true
+
+      # - name: Upload SBOM to release 🔼
+      #   uses: svenstaro/upload-release-action@v2
+      #   if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+      #   with:
+      #     repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
+      #     file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
+      #     asset_name: "SBOM for ${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.spdx.json"
+      #     tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
+      #     overwrite: true
+
+      # - name: Move cache ♻️
+      #   run: |
+      #     rm -rf /tmp/.buildx-cache
+      #     if [ -f /tmp/.buildx-cache-new ]
+      #     then {
+      #       mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      #     }
+      #     fi
