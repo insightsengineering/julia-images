@@ -7,9 +7,6 @@ env:
   PLATFORMS: linux/amd64
 
 on:
-  push:
-    branches:
-      - add-julia-docker-image
   # repository_dispatch:
   #   types:
   #     - scheduled
