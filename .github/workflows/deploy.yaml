@@ -193,9 +193,6 @@ jobs:
           # Push the image if we're running for main
           echo "github.ref = ${{ github.ref }}"
 
-          # TODO remove the line below
-          echo "DOCKER_PUSH=true" >> $GITHUB_OUTPUT
-
           if [ "${{ github.ref }}" == 'refs/heads/main' ]; then
             echo "DOCKER_PUSH=true" >> $GITHUB_OUTPUT
             echo "DOCKER_PUSH = true"
@@ -203,6 +200,10 @@ jobs:
             echo "DOCKER_PUSH=false" >> $GITHUB_OUTPUT
             echo "DOCKER_PUSH = false"
           fi
+
+          # TODO remove
+          echo "DOCKER_PUSH = true"
+          echo "DOCKER_PUSH=true" >> $GITHUB_OUTPUT
 
           echo "SBOM_OUTPUT_FILENAME=$GITHUB_WORKSPACE/sbom.json" >> $GITHUB_OUTPUT
 
