@@ -177,7 +177,7 @@ jobs:
           fi
 
           tag_latest="${{ needs.normalize-inputs.outputs.tag_latest }}"
-          image_name="${{ needs.normalize-inputs.outputs.destination_image_name }}
+          image_name="${{ needs.normalize-inputs.outputs.destination_image_name }}"
 
           # Set full image name
           full_names="${{ env.REGISTRY }}/${{ github.repository_owner }}/${image_name}:${tag}"
