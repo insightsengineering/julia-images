@@ -11,6 +11,7 @@ declare -A pkgs_to_install
 
 shared_deps="\
 wget \
+unattended-upgrades \
 "
 
 pkgs_to_install["julia"]="${shared_deps}"
