@@ -39,20 +39,15 @@ on:
         options:
           - "julia-vscode"
 
-      destination_image_tag:
-        description: Destination image tag
+      tag:
+        description: |
+          Custom Image Tag/Version. Defaults to current date in the `YYYY.MM.DD`
+          format if unspecified.
         required: true
         type: choice
         default: "1.10-bookworm"
         options:
           - "1.10-bookworm"
-
-      tag:
-        description: |
-          Custom Image Tag/Version. Defaults to current date in the `YYYY.MM.DD`
-          format if unspecified.
-        required: false
-        default: ""
 
       tag_latest:
         description: Tag image as `latest`
@@ -89,13 +84,11 @@ jobs:
           ORIGIN=$(normalize ${{ github.event.inputs.origin }} julia)
           SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} 1.10-bookworm)
           DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} julia-vscode)
-          DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} 1.10-bookworm)
 
           # TODO uncomment once this is merged to main.
           # ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
           # SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
           # DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
-          # DESTINATION_IMAGE_TAG=$(normalize ${{ github.event.inputs.destination_image_tag }} ${{ github.event.client_payload.destination_image_tag }})
 
           TAG=$(normalize ${{ github.event.inputs.tag }} ${{ github.event.client_payload.tag }})
           TAG_LATEST=$(normalize ${{ github.event.inputs.tag_latest }} ${{ github.event.client_payload.tag_latest }})
@@ -104,7 +97,6 @@ jobs:
           echo "ORIGIN=$ORIGIN" >> $GITHUB_OUTPUT
           echo "SOURCE_IMAGE_TAG=$SOURCE_IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "DESTINATION_IMAGE_NAME=$DESTINATION_IMAGE_NAME" >> $GITHUB_OUTPUT
-          echo "DESTINATION_IMAGE_TAG=$DESTINATION_IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           echo "TAG_LATEST=$TAG_LATEST" >> $GITHUB_OUTPUT
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
@@ -113,7 +105,6 @@ jobs:
       origin: ${{ steps.normalizer.outputs.ORIGIN }}
       source_image_tag: ${{ steps.normalizer.outputs.SOURCE_IMAGE_TAG }}
       destination_image_name: ${{ steps.normalizer.outputs.DESTINATION_IMAGE_NAME }}
-      destination_image_tag: ${{ steps.normalizer.outputs.DESTINATION_IMAGE_TAG }}
       tag: ${{ steps.normalizer.outputs.TAG }}
       tag_latest: ${{ steps.normalizer.outputs.TAG_LATEST }}
       release_tag: ${{ steps.normalizer.outputs.RELEASE_TAG }}
@@ -186,7 +177,6 @@ jobs:
 
           tag_latest="${{ needs.normalize-inputs.outputs.tag_latest }}"
           image_name="${{ needs.normalize-inputs.outputs.destination_image_name }}
-          image_tag="${{ needs.normalize-inputs.outputs.destination_image_tag }}
 
           # Set full image name
           full_names="${{ env.REGISTRY }}/${{ github.repository_owner }}/${image_name}:${tag}"
@@ -223,7 +213,7 @@ jobs:
             ORIGIN=${{ needs.normalize-inputs.outputs.origin }}
             SOURCE_IMAGE_TAG=${{ needs.normalize-inputs.outputs.source_image_tag }}
             DESTINATION_IMAGE_NAME=${{ needs.normalize-inputs.outputs.destination_image_name }}
-            DESTINATION_IMAGE_TAG=${{ needs.normalize-inputs.outputs.destination_image_tag }}
+            DESTINATION_IMAGE_TAG=${{ needs.normalize-inputs.outputs.tag }}
           platforms: ${{ env.PLATFORMS }}
 
       - name: Generate image manifest 🐳
