@@ -32,7 +32,9 @@ on:
           - "1.10-bookworm"
 
       destination_image_name:
-        description: Destination image name
+        description: |
+          Destination image name, will be available as
+          ghcr.io/insightsengineering/destination_image_name
         required: true
         type: choice
         default: "julia-vscode"
@@ -42,7 +44,7 @@ on:
 
       tag:
         description: |
-          Custom Image Tag/Version. Defaults to current date in the `YYYY.MM.DD`
+          Destination image tag. Defaults to current date in the `YYYY.MM.DD`
           format if unspecified.
         required: true
         type: choice
@@ -114,7 +116,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: normalize-inputs
-    name: Build & Deploy 🚀 ${{ needs.normalize-inputs.outputs.destination_image_name }}:${{ needs.normalize-inputs.outputs.destination_image_tag }}
+    name: Build & Deploy 🚀 ${{ needs.normalize-inputs.outputs.destination_image_name }}:${{ needs.normalize-inputs.outputs.tag }}
 
     # Token permissions
     permissions:
