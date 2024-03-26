@@ -61,7 +61,7 @@ on:
           Release tags follow the `YYYY.MM.DD` format.
           This must be specified if you want to upload artifacts to the release.
         required: false
-        default: ""
+        default: ''
 
 jobs:
   normalize-inputs:
