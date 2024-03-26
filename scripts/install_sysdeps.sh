@@ -58,7 +58,7 @@ echo "PATH=$PATH" >> /etc/profile
 # Set default initializer if unavailable
 if [ ! -f /init ]
 then {
-    echo "sh" > /init
+    echo "#!/bin/bash" > /init
     chmod +x /init
 }
 fi
