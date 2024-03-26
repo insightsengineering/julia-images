@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-echo "Start Visual Studio Code server"
+echo "Starting Visual Studio Code server"
 code-server \
     --bind-addr 0.0.0.0:8081 \
     --auth none \

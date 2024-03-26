@@ -40,9 +40,10 @@ wget -q "${QUARTO_DL_URL}" -O quarto-"${ARCH}".deb
 dpkg -i quarto-"${ARCH}".deb
 quarto check install
 
-if [ "$distribution" == "julia-vscode" ]; then
+if [ "$destination_image_name" == "julia-vscode" ]; then
   # Install VS Code server.
   wget --no-check-certificate https://code-server.dev/install.sh -O - | sh
+  cp /init-vscode /init
 fi
 
 # Install security patches
@@ -55,3 +56,11 @@ rm -rf /var/lib/apt/lists/* quarto-"${ARCH}".deb
 
 echo "LC_ALL=$LC_ALL" >> /etc/profile
 echo "PATH=$PATH" >> /etc/profile
+
+# Set default initializer if unavailable
+if [ ! -f /init ]
+then {
+    echo "sh" > /init
+    chmod +x /init
+}
+fi

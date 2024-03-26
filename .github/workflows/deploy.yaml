@@ -227,49 +227,49 @@ jobs:
         run: |
           docker manifest inspect ${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }} > manifest.json
 
-      # - name: Reclaim Disk Space for SBOM Generation 🚮
-      #   uses: insightsengineering/disk-space-reclaimer@v1
-      #   with:
-      #     tools-cache: false
-      #     android: true
-      #     dotnet: true
-      #     haskell: true
-      #     large-packages: true
-      #     swap-storage: false
-      #     docker-images: true
+      - name: Reclaim Disk Space for SBOM Generation 🚮
+        uses: insightsengineering/disk-space-reclaimer@v1
+        with:
+          tools-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: false
+          docker-images: true
 
-      # - name: Generate SBOM 📃
-      #   uses: anchore/sbom-action@v0
-      #   with:
-      #     image: "${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}"
-      #     output-file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
-      #     artifact-name: "sbom.spdx"
+      - name: Generate SBOM 📃
+        uses: anchore/sbom-action@v0
+        with:
+          image: "${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}"
+          output-file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
+          artifact-name: "sbom.spdx"
 
-      # - name: Upload image manifest to release 🔼
-      #   uses: svenstaro/upload-release-action@v2
-      #   if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
-      #   with:
-      #     repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
-      #     file: "manifest.json"
-      #     asset_name: "image.manifest.${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.json"
-      #     tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
-      #     overwrite: true
+      - name: Upload image manifest to release 🔼
+        uses: svenstaro/upload-release-action@v2
+        if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+        with:
+          repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
+          file: "manifest.json"
+          asset_name: "image.manifest.${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.json"
+          tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
+          overwrite: true
 
-      # - name: Upload SBOM to release 🔼
-      #   uses: svenstaro/upload-release-action@v2
-      #   if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
-      #   with:
-      #     repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
-      #     file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
-      #     asset_name: "SBOM for ${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.spdx.json"
-      #     tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
-      #     overwrite: true
+      - name: Upload SBOM to release 🔼
+        uses: svenstaro/upload-release-action@v2
+        if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+        with:
+          repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
+          file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"
+          asset_name: "SBOM for ${{ steps.build_vars.outputs.OUTPUT_IMAGE_NAME }}.spdx.json"
+          tag: "${{ needs.normalize-inputs.outputs.release_tag }}"
+          overwrite: true
 
-      # - name: Move cache ♻️
-      #   run: |
-      #     rm -rf /tmp/.buildx-cache
-      #     if [ -f /tmp/.buildx-cache-new ]
-      #     then {
-      #       mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-      #     }
-      #     fi
+      - name: Move cache ♻️
+        run: |
+          rm -rf /tmp/.buildx-cache
+          if [ -f /tmp/.buildx-cache-new ]
+          then {
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          }
+          fi
