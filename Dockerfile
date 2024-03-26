@@ -25,10 +25,10 @@ COPY --chmod=0755 [\
     "./"\
 ]
 
-RUN ./install_sysdeps.sh ${DESTINATION_IMAGE_NAME}
-
 COPY --chmod=0755 init-vscode /init-vscode
 COPY config/vs-code-config.yaml /root/.config/code-server/config.yaml
+
+RUN ./install_sysdeps.sh ${DESTINATION_IMAGE_NAME}
 
 WORKDIR /
 
