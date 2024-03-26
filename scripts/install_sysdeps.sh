@@ -59,6 +59,7 @@ echo "PATH=$PATH" >> /etc/profile
 if [ ! -f /init ]
 then {
     echo "#!/bin/bash" > /init
+    echo "julia" >> /init
     chmod +x /init
 }
 fi
