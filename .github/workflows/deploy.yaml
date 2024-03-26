@@ -2,17 +2,17 @@ name: Deploy image to GHCR 🪂
 
 env:
   REGISTRY: ghcr.io
-  # PLATFORMS is a comma-separted list of architectures to build for.
-  # We disable linux/arm64 due to runner mem saturation.
   PLATFORMS: linux/amd64
 
 on:
+  # TODO cleanup
   push:
     branches:
       - add-julia-docker-image
   # repository_dispatch:
   #   types:
   #     - scheduled
+
   workflow_dispatch:
     inputs:
       origin:
@@ -155,9 +155,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.destination_image_tag }}
+          key: ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.tag }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.destination_image_tag }}
+            ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}-${{ needs.normalize-inputs.outputs.tag }}
             ${{ runner.os }}-buildx-${{ needs.normalize-inputs.outputs.destination_image_name }}
             ${{ runner.os }}-buildx-
 

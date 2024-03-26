@@ -23,7 +23,7 @@ docker run -it --entrypoint julia ghcr.io/insightsengineering/julia:1.10-bookwor
 To run an interactive Julia session, execute:
 
 ```shell
-docker run -it --entrypoint julia ghcr.io/insightsengineering/julia:1.10-bookworm
+docker run -it ghcr.io/insightsengineering/julia:1.10-bookworm
 ```
 
 To run a shell in the Julia container, execute:
