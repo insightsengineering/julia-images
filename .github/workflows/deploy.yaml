@@ -247,7 +247,7 @@ jobs:
 
       - name: Upload image manifest to release 🔼
         uses: svenstaro/upload-release-action@v2
-        if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+        if: needs.normalize-inputs.outputs.release_tag != ''
         with:
           repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
           file: "manifest.json"
@@ -257,7 +257,7 @@ jobs:
 
       - name: Upload SBOM to release 🔼
         uses: svenstaro/upload-release-action@v2
-        if: "${{ needs.normalize-inputs.outputs.release_tag }} != ''"
+        if: needs.normalize-inputs.outputs.release_tag != ''
         with:
           repo_token: ${{ secrets.REPO_GITHUB_TOKEN }}
           file: "${{ steps.build_vars.outputs.SBOM_OUTPUT_FILENAME }}"

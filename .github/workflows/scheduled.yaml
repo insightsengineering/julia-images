@@ -1,0 +1,65 @@
+name: Scheduled Deployments ⏲
+
+on:
+  schedule:
+    - cron: '44 19 5,20 * *'
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    name: Create release 🌟
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate release body 📜
+        id: release-body
+        run: |
+          printf "Release $(date +"%Y.%m.%d")\n\n"\
+          "You may view the artifacts in this release for more information "\
+          "about the images that were published." > RELEASE_BODY.txt
+          echo "release-tag=$(date +"%Y.%m.%d")" >> $GITHUB_OUTPUT
+
+      - name: Create release 🌟
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: RELEASE_BODY.txt
+          token: ${{ secrets.REPO_GITHUB_TOKEN }}
+          generate_release_notes: true
+          tag_name: ${{ steps.release-body.outputs.release-tag }}
+
+    outputs:
+      release_tag: ${{ steps.release-body.outputs.release-tag }}
+
+  build:
+    name: Build & Deploy 🚀
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - source_image_tag: '1.10-bookworm'
+            destination_image_name: 'julia-vscode'
+            tag: '1.10-bookworm'
+          - source_image_tag: '1.10-bookworm'
+            destination_image_name: 'julia'
+            tag: '1.10-bookworm'
+
+    # Trigger steps
+    steps:
+      - name: Checkout repository 💳
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Trigger all builds ▶️
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_GITHUB_TOKEN }}
+          event-type: scheduled
+          client-payload: >
+            {
+              "source_image_tag": "${{ matrix.image.source_image_tag }}",
+              "destination_image_name": "${{ matrix.image.destination_image_name }}",
+              "tag": "${{ matrix.image.tag }}",
+              "tag_latest": "true",
+              "release_tag": "${{ needs.create-release.outputs.release_tag }}"
+            }
