@@ -25,8 +25,6 @@ less \
 nano \
 "
 
-mkdir /root/.config
-
 export DEBIAN_FRONTEND=noninteractive
 export ACCEPT_EULA=Y
 apt-get update -y

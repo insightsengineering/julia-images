@@ -9,6 +9,3 @@ code-server \
     --extensions-dir /tmp/codeserver-extensions \
     --disable-update-check \
     --disable-telemetry \
-    &
-
-sleep infinity
