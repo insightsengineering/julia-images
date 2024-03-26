@@ -54,12 +54,3 @@ rm -rf /var/lib/apt/lists/* quarto-"${ARCH}".deb
 
 echo "LC_ALL=$LC_ALL" >> /etc/profile
 echo "PATH=$PATH" >> /etc/profile
-
-# Set default initializer if unavailable
-if [ ! -f /init ]
-then {
-    echo "#!/bin/bash" > /init
-    echo "julia" >> /init
-    chmod +x /init
-}
-fi
