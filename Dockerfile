@@ -22,6 +22,8 @@ WORKDIR /workspace
 # Copy installation scripts
 COPY --chmod=0755 [\
     "scripts/install_sysdeps.sh", \
+    "scripts/install_apps.sh", \
+    "scripts/install_julia_packages.sh", \
     "./"\
 ]
 
@@ -29,6 +31,8 @@ COPY --chmod=0755 init-vscode /init-vscode
 COPY config/vs-code-config.yaml /root/.config/code-server/config.yaml
 
 RUN ./install_sysdeps.sh ${DESTINATION_IMAGE_NAME}
+RUN ./install_apps.sh ${DESTINATION_IMAGE_NAME}
+RUN ./install_julia_packages.sh ${DESTINATION_IMAGE_NAME}
 
 WORKDIR /
 
