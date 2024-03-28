@@ -6,6 +6,6 @@ code-server \
     --auth none \
     --proxy-domain vscode \
     --user-data-dir ~/ \
-    --extensions-dir /tmp/codeserver-extensions \
+    --extensions-dir /root/.local/share/code-server/extensions/ \
     --disable-update-check \
-    --disable-telemetry \
+    --disable-telemetry
