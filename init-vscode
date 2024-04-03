@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+
+echo "Starting Visual Studio Code server"
+code-server \
+    --bind-addr 0.0.0.0:8081 \
+    --auth none \
+    --proxy-domain vscode \
+    --user-data-dir ~/ \
+    --extensions-dir /root/.local/share/code-server/extensions/ \
+    --disable-update-check \
+    --disable-telemetry
