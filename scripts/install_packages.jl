@@ -8,7 +8,8 @@ if ARGS[1] == "julia-vscode"
     "CSV",
     "DataFrames",
     "JSON",
-    "BenchmarkTools"
+    "BenchmarkTools",
+    "Plots"
   ]
 elseif ARGS[1] == "julia"
   pkgs=[
@@ -16,7 +17,8 @@ elseif ARGS[1] == "julia"
     "CSV",
     "DataFrames",
     "JSON",
-    "BenchmarkTools"
+    "BenchmarkTools",
+    "Plots"
   ]
 else
   println("Unknown destination image name.")
