@@ -3,10 +3,10 @@
 To run the image with Julia and Visual Studio Code installed, execute:
 
 ```shell
-docker run -d -p 8081:8081 ghcr.io/insightsengineering/julia-vscode:1.10-bookworm
+docker run -d -p 8081:8081 -v $(pwd):/root/code ghcr.io/insightsengineering/julia-vscode:1.10-bookworm
 ```
 
-You can access Visual Studio code in your browser at `localhost:8081`
+You can access Visual Studio code in your browser at `localhost:8081` and your current working directory will be available in `/root/code` in the container.
 
 To stop the container, run:
 

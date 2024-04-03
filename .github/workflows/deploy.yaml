@@ -5,13 +5,9 @@ env:
   PLATFORMS: linux/amd64
 
 on:
-  # TODO cleanup
-  push:
-    branches:
-      - add-julia-docker-image
-  # repository_dispatch:
-  #   types:
-  #     - scheduled
+  repository_dispatch:
+    types:
+      - scheduled
 
   workflow_dispatch:
     inputs:
@@ -83,18 +79,10 @@ jobs:
             echo ${var}
           }
 
-          # TODO Remove once the workflow appears on main.
-          ORIGIN=$(normalize ${{ github.event.inputs.origin }} julia)
-          SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} 1.10-bookworm)
-          DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} julia-vscode)
-          TAG=$(normalize ${{ github.event.inputs.tag }} 1.10-bookworm)
-
-          # TODO uncomment once this is merged to main.
-          # ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
-          # SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
-          # DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
-          # TAG=$(normalize ${{ github.event.inputs.tag }} ${{ github.event.client_payload.tag }})
-
+          ORIGIN=$(normalize ${{ github.event.inputs.origin }} ${{ github.event.client_payload.origin }})
+          SOURCE_IMAGE_TAG=$(normalize ${{ github.event.inputs.source_image_tag }} ${{ github.event.client_payload.source_image_tag }})
+          DESTINATION_IMAGE_NAME=$(normalize ${{ github.event.inputs.destination_image_name }} ${{ github.event.client_payload.destination_image_name }})
+          TAG=$(normalize ${{ github.event.inputs.tag }} ${{ github.event.client_payload.tag }})
           TAG_LATEST=$(normalize ${{ github.event.inputs.tag_latest }} ${{ github.event.client_payload.tag_latest }})
           RELEASE_TAG=$(normalize ${{ github.event.inputs.release_tag }} ${{ github.event.client_payload.release_tag }})
 
@@ -202,10 +190,6 @@ jobs:
             echo "DOCKER_PUSH=false" >> $GITHUB_OUTPUT
             echo "DOCKER_PUSH = false"
           fi
-
-          # TODO remove
-          echo "DOCKER_PUSH = true"
-          echo "DOCKER_PUSH=true" >> $GITHUB_OUTPUT
 
           echo "SBOM_OUTPUT_FILENAME=$GITHUB_WORKSPACE/sbom.json" >> $GITHUB_OUTPUT
 
