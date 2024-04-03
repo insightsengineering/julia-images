@@ -2,7 +2,7 @@ name: Deploy image to GHCR 🪂
 
 env:
   REGISTRY: ghcr.io
-  PLATFORMS: linux/amd64
+  PLATFORMS: linux/amd64,linux/arm64
 
 on:
   repository_dispatch:
